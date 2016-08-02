@@ -7,7 +7,7 @@ A small tool to simplify ring management for TripleO-based Swift installations.
 POC using tripleo-quickstart
 ----------------------------
 
-1) Deploy a TripleO quickstart[1] undercloud.
+1) Deploy a [TripleO quickstart][1] undercloud.
 
 2) Add some blockdevices to the nodes, using libvirsh on the $VIRTHOST node.
    Make sure you have at least 3 additional devices (to use 3 replicas).
@@ -29,7 +29,7 @@ POC using tripleo-quickstart
 
 4) The hostnames are not yet known, but they are required to create the rings.
    Therefore we need to ensure the hosts are placed in a specific order, and we
-   use the node capabilities to do so (see also [2]):
+   use the node capabilities to do so (see also [the docs][2]):
 
     ironic node-list
     ironic node-update <node uuid> replace properties/capabilities='node:controller-0,profile:control,boot_option:local'
@@ -63,11 +63,11 @@ POC using tripleo-quickstart
     openstack overcloud deploy --control-scale 1 --compute-scale 0 \
         --swift-storage-scale 1 --templates -e templates/swift_env.yaml \
 
-    This will disable the default ring building in TripleO, fetch the rings
-    created by tripleo-swift-ring-tool, and create XFS filesystems on all found
-    blockdevices (except hda/sda/vda).  There is another template named
-    `templates/storage_policy.yaml`; you can modify this if you need more than
-    one storage policy, for example to use erasure coding.
+   This will disable the default ring building in TripleO, fetch the rings
+   created by tripleo-swift-ring-tool, and create XFS filesystems on all found
+   blockdevices (except hda/sda/vda).  There is another template named
+   `templates/storage_policy.yaml`; you can modify this if you need more than
+   one storage policy, for example to use erasure coding.
 
-[1] https://github.com/openstack/tripleo-quickstart
-[2] http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
+[1]: https://github.com/openstack/tripleo-quickstart
+[2]: http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
