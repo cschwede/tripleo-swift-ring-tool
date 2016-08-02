@@ -1,0 +1,35 @@
+heat_template_version: 2014-10-16
+
+description: >
+  Run Puppet extra configuration to prepare disks for Swift
+
+parameters:
+  servers:
+    type: json
+  exclude_devices:
+    type: string
+
+resources:
+  ExtraPuppetConfig:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: puppet
+      config:
+        str_replace:
+          template: |
+            $exclude_devices = split("_EXCLUDE_DEVICES_", ',')
+            $array = split($blockdevices, ',')
+            define addDisks {
+              unless ($name in $exclude_devices) {
+                swift::storage::disk { "${name}": }
+              }
+            }
+            addDisks { $array: }
+          params:
+            _EXCLUDE_DEVICES_: {get_param: exclude_devices}
+
+  ExtraPuppetDeployments:
+    type: OS::Heat::SoftwareDeployments
+    properties:
+      config: {get_resource: ExtraPuppetConfig}
+      servers: {get_param: servers}

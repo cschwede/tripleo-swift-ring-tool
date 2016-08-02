@@ -1,0 +1,36 @@
+resource_registry:
+  OS::TripleO::NodeExtraConfigPost: swift_disk.yaml
+  OS::TripleO::NodeExtraConfig: swift_ring.yaml
+
+parameter_defaults:
+  # Exclude these root devices
+  exclude_devices: "hda,sda,vda"
+
+  # Disable default ring building on the nodes
+  SwiftRingBuild: false
+  RingBuild: false
+
+  # Enable mount_check in account/conter/object server config
+  SwiftMountCheck: true
+  MountCheck: true
+
+  # Make sure we use tagged nodes only, to predict hostnames
+  ControllerSchedulerHints:
+    'capabilities:node': 'controller-%index%'
+  ObjectStorageSchedulerHints:
+    'capabilities:node': 'objectstorage-%index%'
+
+  # Fetch rings from here
+  storage_url: http://192.0.2.1:8080/v1/AUTH_9e80f3b836ad4b8c8212eb2f9909c2ea
+
+  # An example storage policy
+  controllerExtraConfig:
+    controller_classes:
+      - swift::config
+    swift::config::swift_config:
+      storage-policy:0/name:
+        value: 'standard'
+      storage-policy:0/policy_type:
+        value: 'replication'
+      storage-policy:0/default:
+        value: 'yes'
