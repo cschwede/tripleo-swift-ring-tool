@@ -39,7 +39,7 @@ POC using tripleo-quickstart
    Note: make sure you use 'controller-%index' or 'objectstorage-%index',
    otherwise the hostnames won't match with the rings built by `tripleo-swift-ring-tool`.
 
-5) Install and run the `tripleo-swift-ring-tool` to create rings based on the
+5) Install the `tripleo-swift-ring-tool` to create rings based on the
    disks gathered from introspection data:
 
     git clone git://github.com/cschwede/tripleo-swift-ring-tool.git
@@ -47,13 +47,15 @@ POC using tripleo-quickstart
     sudo python setup.py install
     cd ~/
 
+6) Run the `tripleo-swift-ring-tool` and upload the created ring- and
+   builderfiles to the undercloud Swift. The `upload-swift-artifacts` tool will
+   create a template in `~/.tripleo/environments/deployment-artifacts.yaml`
+   that includes a temporary url that will be used during the deployment.
+
     tripleo-swift-ring-tool overcloud-rings
     upload-swift-artifacts -f overcloud-rings/rings.tar.gz
 
-   Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] for this.
-
-6) Set the `storage_url` in `templates/swift_env.yaml` using the output from
-   previous step.
+   Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] tool for this.
 
 7) Deploy the overcloud using the following templates from this repo:
 
