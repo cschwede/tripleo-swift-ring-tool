@@ -6,8 +6,12 @@ description: >
 parameters:
   servers:
     type: json
-  exclude_devices:
+  ExcludeDevices:
     type: string
+    description: >
+      Blockdevices that should not prepared as Swift disks.
+      Defaults to hda,sda,vda to exclude root disks.
+    default: 'hda,sda,vda'
 
 resources:
   ExtraPuppetConfig:
@@ -26,7 +30,7 @@ resources:
             }
             addDisks { $array: }
           params:
-            _EXCLUDE_DEVICES_: {get_param: exclude_devices}
+            _EXCLUDE_DEVICES_: {get_param: ExcludeDevices}
 
   ExtraPuppetDeployments:
     type: OS::Heat::SoftwareDeployments

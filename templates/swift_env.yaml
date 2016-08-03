@@ -2,9 +2,6 @@ resource_registry:
   OS::TripleO::NodeExtraConfigPost: swift_disk.yaml
 
 parameter_defaults:
-  # Exclude these root devices
-  exclude_devices: "hda,sda,vda"
-
   # Disable default ring building on the nodes
   SwiftRingBuild: false
   RingBuild: false
