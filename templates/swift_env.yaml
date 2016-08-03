@@ -1,6 +1,5 @@
 resource_registry:
   OS::TripleO::NodeExtraConfigPost: swift_disk.yaml
-  OS::TripleO::NodeExtraConfig: swift_ring.yaml
 
 parameter_defaults:
   # Exclude these root devices
@@ -19,9 +18,6 @@ parameter_defaults:
     'capabilities:node': 'controller-%index%'
   ObjectStorageSchedulerHints:
     'capabilities:node': 'objectstorage-%index%'
-
-  # Fetch rings from here
-  storage_url: http://192.0.2.1:8080/v1/AUTH_9e80f3b836ad4b8c8212eb2f9909c2ea
 
   # An example storage policy
   controllerExtraConfig:

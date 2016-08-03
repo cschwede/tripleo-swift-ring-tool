@@ -45,15 +45,12 @@ POC using tripleo-quickstart
     git clone git://github.com/cschwede/tripleo-swift-ring-tool.git
     cd tripleo-swift-ring-tool
     sudo python setup.py install
+    cd ~/
 
-    export IRONIC_INSPECTOR_PASSWORD=$(grep ironic ~/undercloud-passwords.conf | cut -f 2 -d "=")
-    tripleo-swift-ring-tool account.builder
-    tripleo-swift-ring-tool container.builder
-    tripleo-swift-ring-tool object.builder
+    tripleo-swift-ring-tool overcloud-rings
+    upload-swift-artifacts -f overcloud-rings/rings.tar.gz
 
-   This will also upload the .builder/.ring.gz file to the undercloud Swift,
-   and the tool will display a storage url where the rings can be downloaded.
-   Note: this is a public accessible URL in this POC.
+   Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] for this.
 
 6) Set the `storage_url` in `templates/swift_env.yaml` using the output from
    previous step.
@@ -62,6 +59,7 @@ POC using tripleo-quickstart
 
     openstack overcloud deploy --control-scale 1 --compute-scale 0 \
         --swift-storage-scale 1 --templates -e templates/swift_env.yaml \
+        -e ~/.tripleo/environments/deployment-artifacts.yaml
 
    This will disable the default ring building in TripleO, fetch the rings
    created by tripleo-swift-ring-tool, and create XFS filesystems on all found
@@ -71,3 +69,4 @@ POC using tripleo-quickstart
 
 [1]: https://github.com/openstack/tripleo-quickstart
 [2]: http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
+[3]: https://raw.githubusercontent.com/openstack/tripleo-common/master/scripts/upload-swift-artifacts

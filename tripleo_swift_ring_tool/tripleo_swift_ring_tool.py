@@ -4,20 +4,21 @@ import argparse
 import logging
 import os
 import sys
+import tarfile
 
 import ironic_inspector_client
 import ironicclient
 from keystoneauth1 import loading as ksloading
 from swift.common.ring import RingBuilder
-import swiftclient
 
 
 def main(argv=sys.argv):
     parser = argparse.ArgumentParser(
         description='Swift ring helper for TripleO')
 
-    parser.add_argument('builderfile',
-                        help='Swift ring builder filename')
+    parser.add_argument('ringdir',
+                        default='swift-rings',
+                        help='Directory for Swift ring builder files')
 
     parser.add_argument('--part_power',
                         default=14, type=int,
@@ -50,10 +51,6 @@ def main(argv=sys.argv):
                         default=os.environ.get('OS_AUTH_URL'),
                         help='Defaults to env[OS_AUTH_URL]')
 
-    parser.add_argument('--ironic-inspector-password',
-                        default=os.environ.get('IRONIC_INSPECTOR_PASSWORD'),
-                        help='Defaults to env[IRONIC_INSPECTOR_PASSWORD]')
-
     parser.add_argument('--debug', action='store_true',
                         help='Enable debug logging')
 
@@ -66,17 +63,22 @@ def main(argv=sys.argv):
     logging.basicConfig(format=log_format, level=log_level)
     logging.getLogger('requests').setLevel(logging.WARNING)
 
-    builder_file, ring_file = write_ring(args)
-    if args.ironic_inspector_password:
-        upload_file(args, [builder_file, ring_file])
-    else:
-        logging.info('Skipping ring upload - inspector password not set')
+    if not os.path.isdir(args.ringdir):
+        os.makedirs(args.ringdir)
+
+    tar = tarfile.open("%s/rings.tar.gz" % args.ringdir, "w:gz")
+    for ring in ['account', 'container', 'object']:
+        fname = "%s/%s.builder" % (args.ringdir, ring)
+        builder_file, ring_file = write_ring(args, fname)
+        tar.add(builder_file, "etc/swift/%s" % os.path.basename(builder_file))
+        tar.add(ring_file, "etc/swift/%s" % os.path.basename(ring_file))
+    tar.close()
 
 
-def write_ring(args):
+def write_ring(args, builderfile):
     # Make an educated guess about the used port. These are the defaults for
     # TripleO-based deployments in Mitaka
-    builder_fname = os.path.basename(args.builderfile)
+    builder_fname = os.path.basename(builderfile)
     if 'account' in builder_fname:
         port = 6002
     elif 'container' in builder_fname:
@@ -88,13 +90,13 @@ def write_ring(args):
 
     logging.debug('Set port for new devices to %d' % port)
 
-    if not os.path.isfile(args.builderfile):
+    if not os.path.isfile(builderfile):
         logging.info(
-            '%s not found, creating new builder file', args.builderfile)
+            '%s not found, creating new builder file', builderfile)
         rb = RingBuilder(args.part_power, args.replicas, args.min_part_hours)
     else:
-        logging.info('Using existing builder file %s', args.builderfile)
-        rb = RingBuilder.load(args.builderfile)
+        logging.info('Using existing builder file %s', builderfile)
+        rb = RingBuilder.load(builderfile)
 
     devices = get_disks(args)
 
@@ -115,11 +117,11 @@ def write_ring(args):
             logging.info(
                 'Ignoring existing device %s / %s', dev['ip'], dev['device'])
     rb.rebalance()
-    rb.save(args.builderfile)
-    ring_file = os.path.splitext(args.builderfile)[0] + '.ring.gz'
+    rb.save(builderfile)
+    ring_file = os.path.splitext(builderfile)[0] + '.ring.gz'
     ring_data = rb.get_ring()
     ring_data.save(ring_file)
-    return [args.builderfile, ring_file]
+    return [builderfile, ring_file]
 
 
 def get_disks(args):
@@ -168,29 +170,6 @@ def get_disks(args):
                 all_disks.append(entry)
 
     return all_disks
-
-
-def upload_file(args, filenames):
-    swift = swiftclient.client.Connection(
-        authurl=args.os_auth_url,
-        tenant_name='service',
-        user='ironic',
-        key=args.ironic_inspector_password,
-        auth_version=2)
-    storage_url, _ = swift.get_auth()
-    logging.info('Storage URL to use in the environment: %s', storage_url)
-    # Ensure container exists and is public readable
-    headers = {'X-Container-Read': '.r:*,.rlistings',
-               'X-Container-Meta-Web-Listings': 'true'}
-    swift.put_container('overcloud-swift-rings', headers)
-    swift.post_container('overcloud-swift-rings', headers)
-
-    for filename in filenames:
-        objname = os.path.basename(filename)
-        with open(filename) as inf:
-            contents = inf.read()
-            swift.put_object('overcloud-swift-rings', objname, contents)
-            logging.info('Uploaded %s to undercloud Swift', filename)
 
 
 if __name__ == "__main__":
