@@ -108,6 +108,7 @@ def write_ring(args, builderfile):
             dev['region'] = 1
             dev['zone'] = 1
             dev['port'] = port
+            dev['meta'] = dev['node_uuid']
             # Could be improved; it's the storage network by default
             dev['replication_ip'] = dev['ip']
             dev['replication_port'] = dev['port']
@@ -166,7 +167,8 @@ def get_disks(args):
             if root_disk.get('name') != disk.get('name'):
                 entry = {'ip': "%s-storage" % display_name,
                          'device': os.path.basename(disk.get('name')),
-                         'size': disk.get('size', 0)}
+                         'size': disk.get('size', 0),
+                         'node_uuid': node.uuid}
                 all_disks.append(entry)
 
     return all_disks
