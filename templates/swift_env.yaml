@@ -22,14 +22,3 @@ parameter_defaults:
   CephStorageSchedulerHints:
     'capabilities:node': 'cephstorage-%index%'
 
-  # An example storage policy
-  controllerExtraConfig:
-    controller_classes:
-      - swift::config
-    swift::config::swift_config:
-      storage-policy:0/name:
-        value: 'standard'
-      storage-policy:0/policy_type:
-        value: 'replication'
-      storage-policy:0/default:
-        value: 'yes'
