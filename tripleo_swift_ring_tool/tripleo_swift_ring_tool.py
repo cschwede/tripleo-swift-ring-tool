@@ -109,7 +109,7 @@ def write_ring(args, builderfile):
             dev['zone'] = 1
             dev['port'] = port
             dev['meta'] = dev['node_uuid']
-            # Could be improved; it's the storage network by default
+            # Could be improve to use the storage network
             dev['replication_ip'] = dev['ip']
             dev['replication_port'] = dev['port']
             rb.add_dev(dev)
@@ -165,7 +165,7 @@ def get_disks(args):
         disks = data.get('inventory', {}).get('disks', [])
         for disk in disks:
             if root_disk.get('name') != disk.get('name'):
-                entry = {'ip': "%s-storage" % display_name,
+                entry = {'ip': "%s" % display_name,
                          'device': os.path.basename(disk.get('name')),
                          'size': disk.get('size', 0),
                          'node_uuid': node.uuid}
