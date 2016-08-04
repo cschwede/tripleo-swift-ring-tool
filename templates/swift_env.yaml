@@ -15,6 +15,12 @@ parameter_defaults:
     'capabilities:node': 'controller-%index%'
   ObjectStorageSchedulerHints:
     'capabilities:node': 'objectstorage-%index%'
+  NovaComputeSchedulerHints:
+    'capabilities:node': 'novacompute-%index%'
+  BlockStorageSchedulerHints:
+    'capabilities:node': 'blockstorage-%index%'
+  CephStorageSchedulerHints:
+    'capabilities:node': 'cephstorage-%index%'
 
   # An example storage policy
   controllerExtraConfig:
