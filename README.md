@@ -15,12 +15,12 @@ POC using tripleo-quickstart
 
     ssh $VIRTHOST
     su - stack
-    dd if=/dev/zero of=controller_0_vdb.img bs=1k count=100k
-    dd if=/dev/zero of=controller_0_vdc.img bs=1k count=100k
-    dd if=/dev/zero of=controller_0_vdd.img bs=1k count=100k
-    virsh attach-disk --config controller_0 ~/controller_0_vdb.img vdb
-    virsh attach-disk --config controller_0 ~/controller_0_vdc.img vdc
-    virsh attach-disk --config controller_0 ~/controller_0_vdd.img vdd
+    dd if=/dev/zero of=control_0_vdb.img bs=1k count=100k
+    dd if=/dev/zero of=control_0_vdc.img bs=1k count=100k
+    dd if=/dev/zero of=control_0_vdd.img bs=1k count=100k
+    virsh attach-disk --config control_0 ~/control_0_vdb.img vdb
+    virsh attach-disk --config control_0 ~/control_0_vdc.img vdc
+    virsh attach-disk --config control_0 ~/control_0_vdd.img vdd
 
 3) Run the introspection on the undercloud:
 
@@ -29,15 +29,18 @@ POC using tripleo-quickstart
 
 4) The hostnames are not yet known, but they are required to create the rings.
    Therefore we need to ensure the hosts are placed in a specific order, and we
-   use the node capabilities to do so (see also [the docs][2]):
+   use the node capabilities to do so (see also [the docs][2]). If you just
+   used the default devmode in `tripleo-quickstart`, do the following:
 
-    ironic node-list
-    ironic node-update <node uuid> replace properties/capabilities='node:controller-0,profile:control,boot_option:local'
+    ironic node-update compute-0 replace \
+        properties/capabilities='node:novacompute-0,profile:compute,cpu_hugepages:true,boot_option:local,cpu_vt:true'
 
-    ironic node-update <node uuid> replace properties/capabilities='node:objectstorage-0,profile:control,boot_option:local'
+    ironic node-update control-0 replace \
+        properties/capabilities='node:controller-0,profile:control,cpu_hugepages:true,boot_option:local,cpu_vt:true'
 
-   Note: make sure you use 'controller-%index' or 'objectstorage-%index',
-   otherwise the hostnames won't match with the rings built by `tripleo-swift-ring-tool`.
+   Note: make sure you use 'controller-%index', 'objectstorage-%index' or
+   'novacompute-%index'.  Otherwise the hostnames won't match with the rings
+   built by `tripleo-swift-ring-tool`.
 
 5) Install the `tripleo-swift-ring-tool` to create rings based on the
    disks gathered from introspection data:
@@ -59,8 +62,8 @@ POC using tripleo-quickstart
 
 7) Deploy the overcloud using the following templates from this repo:
 
-    openstack overcloud deploy --control-scale 1 --compute-scale 0 \
-        --swift-storage-scale 1 --templates -e templates/swift_env.yaml \
+    openstack overcloud deploy --templates \
+        -e templates/swift_env.yaml \
         -e ~/.tripleo/environments/deployment-artifacts.yaml
 
    This will disable the default ring building in TripleO, fetch the rings
