@@ -1,6 +1,3 @@
-resource_registry:
-  OS::TripleO::NodeExtraConfigPost: swift_disk.yaml
-
 parameter_defaults:
   # Disable default ring building on the nodes
   SwiftRingBuild: false

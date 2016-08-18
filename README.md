@@ -53,7 +53,10 @@ POC using tripleo-quickstart
 6) Run the `tripleo-swift-ring-tool` and upload the created ring- and
    builderfiles to the undercloud Swift. The `upload-swift-artifacts` tool will
    create a template in `~/.tripleo/environments/deployment-artifacts.yaml`
-   that includes a temporary url that will be used during the deployment.
+   that includes a temporary url that will be used during the deployment. The
+   `tripleo-swift-ring-tool` will create a template in
+   `~/.tripleo/environments/swift_disks.yaml` with a per-node list of disks to
+   prepare for Swift.
 
     tripleo-swift-ring-tool overcloud-rings
     upload-swift-artifacts -f overcloud-rings/rings.tar.gz
@@ -64,6 +67,7 @@ POC using tripleo-quickstart
 
     openstack overcloud deploy --templates \
         -e templates/swift_env.yaml \
+        -e ~/.tripleo/environments/swift_disks.yaml \
         -e ~/.tripleo/environments/deployment-artifacts.yaml
 
    This will disable the default ring building in TripleO, fetch the rings

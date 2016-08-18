@@ -1,6 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import argparse
+import json
 import logging
 import os
 import sys
@@ -67,15 +68,30 @@ def main(argv=sys.argv):
         os.makedirs(args.ringdir)
 
     tar = tarfile.open("%s/rings.tar.gz" % args.ringdir, "w:gz")
+    devices, node_data_json = get_disks(args)
     for ring in ['account', 'container', 'object']:
         fname = "%s/%s.builder" % (args.ringdir, ring)
-        builder_file, ring_file = write_ring(args, fname)
+        builder_file, ring_file = write_ring(args, devices, fname)
         tar.add(builder_file, "etc/swift/%s" % os.path.basename(builder_file))
         tar.add(ring_file, "etc/swift/%s" % os.path.basename(ring_file))
-    tar.close()
+    header = """resource_registry:
+  OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/per_node.yaml
+
+parameter_defaults:
+  NodeDataLookup: |
+"""
+
+    env_dir = os.path.expanduser("~/.tripleo/environments/")
+
+    if not os.path.isdir(env_dir):
+        os.makedirs(env_dir)
+
+    with open(os.path.join(env_dir, "swift_disks.yaml"), "wb") as sd:
+        sd.write(header)
+        sd.write("    " + json.dumps(node_data_json))
 
 
-def write_ring(args, builderfile):
+def write_ring(args, devices, builderfile):
     # Make an educated guess about the used port. These are the defaults for
     # TripleO-based deployments in Mitaka
     builder_fname = os.path.basename(builderfile)
@@ -97,8 +113,6 @@ def write_ring(args, builderfile):
     else:
         logging.info('Using existing builder file %s', builderfile)
         rb = RingBuilder.load(builderfile)
-
-    devices = get_disks(args)
 
     # Add all missing devices
     for dev in devices:
@@ -146,6 +160,7 @@ def get_disks(args):
 
     insp_client = ironic_inspector_client.ClientV1(session=keystone_session)
     all_disks = []
+    node_data_json = {}
     for node in ironic.node.list():
         details = ironic.node.get(node.uuid)
         display_name = details.instance_info.get('display_name')
@@ -163,15 +178,20 @@ def get_disks(args):
         data = insp_client.get_data(node.uuid)
         root_disk = data.get('root_disk')
         disks = data.get('inventory', {}).get('disks', [])
+        machine_uuid = data.get('extra', {}).get('system', {}).get('product', {}).get('uuid')
+        node_data_json[machine_uuid] = {}
+        node_data_json[machine_uuid]["swift::storage::disks::args"] = {}
         for disk in disks:
             if root_disk.get('name') != disk.get('name'):
+                device = os.path.basename(disk.get('name'))
                 entry = {'ip': "%s" % display_name,
-                         'device': os.path.basename(disk.get('name')),
+                         'device': device,
                          'size': disk.get('size', 0),
                          'node_uuid': node.uuid}
                 all_disks.append(entry)
+                node_data_json[machine_uuid]["swift::storage::disks::args"][device] = {}
 
-    return all_disks
+    return all_disks, node_data_json
 
 
 if __name__ == "__main__":
