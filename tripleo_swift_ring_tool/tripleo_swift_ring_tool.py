@@ -122,7 +122,7 @@ def write_ring(args, devices, builderfile):
             dev['region'] = 1
             dev['zone'] = 1
             dev['port'] = port
-            dev['meta'] = dev['node_uuid']
+            dev['meta'] = dev['machine_uuid']
             # Could be improve to use the storage network
             dev['replication_ip'] = dev['ip']
             dev['replication_port'] = dev['port']
@@ -166,18 +166,6 @@ def get_disks(args):
     node_data_json = {}
     for node in ironic.node.list():
         details = ironic.node.get(node.uuid)
-        display_name = details.instance_info.get('display_name')
-        if not display_name:
-            # Instance is not yet started, so we need to do an educated guess
-            # about the hostname
-            _capabilities = details.properties.get('capabilities')
-            capabilities = dict(
-                [entry.split(':') for entry in _capabilities.split(',')])
-            cap_node = capabilities.get('node')
-            if not cap_node:
-                # Node is not tagged, skip it
-                continue
-            display_name = "overcloud-%s" % cap_node
         data = insp_client.get_data(node.uuid)
         root_disk = data.get('root_disk')
         disks = data.get('inventory', {}).get('disks', [])
@@ -187,10 +175,10 @@ def get_disks(args):
         for disk in disks:
             if root_disk.get('name') != disk.get('name'):
                 device = os.path.basename(disk.get('name'))
-                entry = {'ip': "%s" % display_name,
+                entry = {'ip': "%s" % machine_uuid,
                          'device': device,
                          'size': disk.get('size', 0),
-                         'node_uuid': node.uuid}
+                         'machine_uuid': machine_uuid}
                 all_disks.append(entry)
                 node_data_json[machine_uuid]["swift::storage::disks::args"][device] = {}
 
