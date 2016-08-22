@@ -59,7 +59,7 @@ POC using tripleo-quickstart
    prepare for Swift.
 
     tripleo-swift-ring-tool overcloud-rings
-    upload-swift-artifacts -f overcloud-rings/rings.tar.gz
+    OS_AUTH_URL=`echo "$OS_AUTH_URL" | sed -e 's/v2.0/v3/g'`OS_IDENTITY_API_VERSION=3 ./upload-swift-artifacts -f overcloud-rings/rings.tar.gz
 
    Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] tool for this.
 
