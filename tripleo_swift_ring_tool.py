@@ -75,7 +75,7 @@ def main(argv=sys.argv):
         tar.add(builder_file, "etc/swift/%s" % os.path.basename(builder_file))
         tar.add(ring_file, "etc/swift/%s" % os.path.basename(ring_file))
     header = """resource_registry:
-  OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/per_node.yaml
+  OS::TripleO::NodeExtraConfig: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/per_node.yaml
 
 parameter_defaults:
   # Disable default ring building on the nodes
