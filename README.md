@@ -27,20 +27,9 @@ POC using tripleo-quickstart
     source stackrc
     openstack baremetal introspection bulk start
 
-4) The hostnames are not yet known, but they are required to create the rings.
-   Therefore we need to ensure the hosts are placed in a specific order, and we
-   use the node capabilities to do so (see also [the docs][2]). If you just
-   used the default devmode in `tripleo-quickstart`, do the following:
+4) You need the following patch on your undercloud instance:
 
-    ironic node-update compute-0 replace \
-        properties/capabilities='node:novacompute-0,profile:compute,cpu_hugepages:true,boot_option:local,cpu_vt:true'
-
-    ironic node-update control-0 replace \
-        properties/capabilities='node:controller-0,profile:control,cpu_hugepages:true,boot_option:local,cpu_vt:true'
-
-   Note: make sure you use 'controller-%index', 'objectstorage-%index' or
-   'novacompute-%index'.  Otherwise the hostnames won't match with the rings
-   built by `tripleo-swift-ring-tool`.
+    https://review.openstack.org/358643/
 
 5) Install the `tripleo-swift-ring-tool` to create rings based on the
    disks gathered from introspection data:
@@ -63,17 +52,15 @@ POC using tripleo-quickstart
 
    Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] tool for this.
 
-7) Deploy the overcloud using the following templates from this repo:
+7) Deploy the overcloud:
 
-    openstack overcloud deploy --templates \
-        -e ~/.tripleo/environments/swift_disks.yaml \
-        -e ~/.tripleo/environments/deployment-artifacts.yaml
+    openstack overcloud deploy --templates
 
-   This will disable the default ring building in TripleO, fetch the rings
-   created by tripleo-swift-ring-tool, and create XFS filesystems on all found
-   blockdevices (except hda/sda/vda).  There is another template named
-   `templates/storage_policy.yaml`; you can modify this if you need more than
-   one storage policy, for example to use erasure coding.
+   This will deploy an overcloud and
+   - disable the default ring building in TripleO
+   - fetch the rings created by tripleo-swift-ring-tool
+   - create XFS filesystems on all found blockdevices (except hda/sda/vda)
+   - add system uuid hostname aliases
 
 [1]: https://github.com/openstack/tripleo-quickstart
 [2]: http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
