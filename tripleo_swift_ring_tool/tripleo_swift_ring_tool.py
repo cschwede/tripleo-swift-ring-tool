@@ -11,7 +11,7 @@ import ironic_inspector_client
 import ironicclient
 from keystoneauth1 import loading as ksloading
 from swift.common.ring import RingBuilder
-
+from swift.common.exceptions import RingValidationError
 
 def main(argv=sys.argv):
     parser = argparse.ArgumentParser(
@@ -131,7 +131,10 @@ def write_ring(args, devices, builderfile):
         else:
             logging.info(
                 'Ignoring existing device %s / %s', dev['ip'], dev['device'])
-    rb.rebalance()
+    try:
+        rb.rebalance()
+    except RingValidationError as exc:
+        logging.error(exc)
     rb.save(builderfile)
     ring_file = os.path.splitext(builderfile)[0] + '.ring.gz'
     ring_data = rb.get_ring()
