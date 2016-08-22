@@ -78,6 +78,14 @@ def main(argv=sys.argv):
   OS::TripleO::ControllerExtraConfigPre: /usr/share/openstack-tripleo-heat-templates/puppet/extraconfig/pre_deploy/per_node.yaml
 
 parameter_defaults:
+  # Disable default ring building on the nodes
+  SwiftRingBuild: false
+  RingBuild: false
+
+  # Enable mount_check in account/conter/object server config
+  SwiftMountCheck: true
+  MountCheck: true
+
   NodeDataLookup: |
 """
 

@@ -66,7 +66,6 @@ POC using tripleo-quickstart
 7) Deploy the overcloud using the following templates from this repo:
 
     openstack overcloud deploy --templates \
-        -e templates/swift_env.yaml \
         -e ~/.tripleo/environments/swift_disks.yaml \
         -e ~/.tripleo/environments/deployment-artifacts.yaml
 
