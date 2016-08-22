@@ -17,24 +17,14 @@ class DummyNode(object):
         self.uuid = 'uuid'
 
 
-class DummyDetails(object):
-    def __init__(self, display_name=None):
-        self.instance_info = {'display_name': display_name}
-        self.properties = {'capabilities': 'node:node-0,other:value'}
-
-
 class TestRingUtil(unittest.TestCase):
     @mock.patch('ironicclient.client')
     @mock.patch('ironic_inspector_client.ClientV1')
     @mock.patch('keystoneauth1.loading')
     def test_get_disks(self, mock_keystone, mock_inspector, mock_ironicclient):
         args = DummyArgs()
-        # Two nodes found. One down (no displayname yet), one with a node
-        # capability set
         mock_ironicclient.get_client().node.list.return_value = [
-            DummyNode(), DummyNode()]
-        mock_ironicclient.get_client().node.get.side_effect = [
-            DummyDetails('overcloud-some-0'), DummyDetails()]
+            DummyNode()]
 
         # Both nodes have one root disk and another storage disk with a
         # whopping size of 1000 bytes
@@ -43,10 +33,18 @@ class TestRingUtil(unittest.TestCase):
             'inventory': {'disks': [
                 {'name': '/dev/vda'},
                 {'name': '/dev/vdb', 'size': 1000},
-            ]}}
+            ]},
+            'extra': {'system': {'product': {
+                'uuid': 'A72CF094-8D2C-49D8-B76A-79C531CFBB23'}}}}
 
-        expected = [
-            {'device': 'vdb', 'ip': 'overcloud-some-0-storage', 'size': 1000},
-            {'device': 'vdb', 'ip': 'overcloud-node-0-storage', 'size': 1000}]
+        expected_disks = [
+            {'device': 'vdb',
+             'ip': 'A72CF094-8D2C-49D8-B76A-79C531CFBB23',
+             'machine_uuid': 'A72CF094-8D2C-49D8-B76A-79C531CFBB23',
+             'size': 1000}]
+        expected_node_data_json = {'A72CF094-8D2C-49D8-B76A-79C531CFBB23':
+             {'swift::storage::disks::args': {'vdb': {}}}}
 
-        self.assertEqual(expected, tripleo_swift_ring_tool.get_disks(args))
+        all_disks, node_data_json = tripleo_swift_ring_tool.get_disks(args)
+        self.assertEqual(expected_disks, all_disks)
+        self.assertEqual(expected_node_data_json, node_data_json)
