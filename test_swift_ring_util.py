@@ -1,7 +1,7 @@
 import mock
 import unittest
 
-from tripleo_swift_ring_tool import tripleo_swift_ring_tool
+import tripleo_swift_ring_tool
 
 
 class DummyArgs(object):

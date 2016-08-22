@@ -34,10 +34,7 @@ POC using tripleo-quickstart
 5) Install the `tripleo-swift-ring-tool` to create rings based on the
    disks gathered from introspection data:
 
-    git clone git://github.com/cschwede/tripleo-swift-ring-tool.git
-    cd tripleo-swift-ring-tool
-    sudo python setup.py install
-    cd ~/
+    curl -O "https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py"
 
 6) Run the `tripleo-swift-ring-tool` and upload the created ring- and
    builderfiles to the undercloud Swift. The `upload-swift-artifacts` tool will
