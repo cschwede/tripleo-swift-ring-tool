@@ -132,8 +132,7 @@ def write_ring(args, devices, builderfile):
             dev['zone'] = 1
             dev['port'] = port
             dev['meta'] = dev['machine_uuid']
-            # Could be improve to use the storage network
-            dev['replication_ip'] = dev['ip']
+            dev['replication_ip'] = "%s.storage" % dev['ip']
             dev['replication_port'] = dev['port']
             rb.add_dev(dev)
             logging.info('Added device %s / %s', dev['ip'], dev['device'])
