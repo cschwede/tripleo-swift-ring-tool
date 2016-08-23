@@ -13,6 +13,7 @@ from keystoneauth1 import loading as ksloading
 from swift.common.ring import RingBuilder
 from swift.common.exceptions import RingValidationError
 
+
 def main(argv=sys.argv):
     parser = argparse.ArgumentParser(
         description='Swift ring helper for TripleO')
@@ -151,12 +152,16 @@ def write_ring(args, devices, builderfile):
 
 
 def get_disks(args):
-    ironic = ironicclient.client.get_client(
-        1,
-        os_username=args.os_username,
-        os_password=args.os_password,
-        os_auth_url=args.os_auth_url,
-        os_tenant_name=args.os_tenant_name)
+    try:
+        ironic = ironicclient.client.get_client(
+            1,
+            os_username=args.os_username,
+            os_password=args.os_password,
+            os_auth_url=args.os_auth_url,
+            os_tenant_name=args.os_tenant_name)
+    except ironicclient.exc.AmbiguousAuthSystem as exc:
+        logging.error(exc)
+        return [], {}
 
     loader = ksloading.get_plugin_loader('password')
 
