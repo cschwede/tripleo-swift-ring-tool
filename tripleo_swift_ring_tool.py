@@ -188,7 +188,7 @@ def get_disks(args):
         for disk in disks:
             if root_disk.get('name') != disk.get('name'):
                 device = os.path.basename(disk.get('name'))
-                entry = {'ip': "%s" % machine_uuid,
+                entry = {'ip': "%s" % machine_uuid.lower(),
                          'device': device,
                          'size': disk.get('size', 0),
                          'machine_uuid': machine_uuid}
