@@ -125,13 +125,12 @@ def write_ring(args, devices, builderfile):
 
     # Add all missing devices
     for dev in devices:
-        _dev = rb.search_devs(dev)
+        _dev = rb.search_devs({'meta': dev['meta']})
         if not _dev:
             dev['weight'] = float(dev.get('size')) / 10**9
             dev['region'] = 1
             dev['zone'] = 1
             dev['port'] = port
-            dev['meta'] = dev['machine_uuid']
             dev['replication_ip'] = "%s.storage" % dev['ip']
             dev['replication_port'] = dev['port']
             rb.add_dev(dev)
@@ -190,7 +189,7 @@ def get_disks(args):
                 entry = {'ip': "%s" % machine_uuid.lower(),
                          'device': device,
                          'size': disk.get('size', 0),
-                         'machine_uuid': machine_uuid}
+                         'meta': '%s:%s' % (machine_uuid.lower(), device)}
                 all_disks.append(entry)
                 node_data_json[machine_uuid]["swift::storage::disks::args"][device] = {}
 
