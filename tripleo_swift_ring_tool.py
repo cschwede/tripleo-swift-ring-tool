@@ -131,7 +131,7 @@ def write_ring(args, devices, builderfile):
             dev['region'] = 1
             dev['zone'] = 1
             dev['port'] = port
-            dev['replication_ip'] = "%s.storage" % dev['ip']
+            dev['replication_ip'] = dev['ip']
             dev['replication_port'] = dev['port']
             rb.add_dev(dev)
             logging.info('Added device %s / %s', dev['ip'], dev['device'])
@@ -186,7 +186,7 @@ def get_disks(args):
         for disk in disks:
             if root_disk.get('name') != disk.get('name'):
                 device = os.path.basename(disk.get('name'))
-                entry = {'ip': "%s" % machine_uuid.lower(),
+                entry = {'ip': "%s.storagemgmt" % machine_uuid.lower(),
                          'device': device,
                          'size': disk.get('size', 0),
                          'meta': '%s:%s' % (machine_uuid.lower(), device)}
