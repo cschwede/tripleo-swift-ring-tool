@@ -7,51 +7,53 @@ A small tool to simplify ring management for TripleO-based Swift installations.
 POC using tripleo-quickstart
 ----------------------------
 
-1) Deploy a [TripleO quickstart][1] undercloud.
+1) Deploy a [TripleO quickstart][1] undercloud including Gerrit reviews
+   [#359630][2] (tripleo-quickstart) and [#358643][3] (tripleo-heat-templates)
+   and one ore more objectstorage nodes:
 
-2) Add some blockdevices to the nodes, using libvirsh on the $VIRTHOST node.
-   Make sure you have at least 3 additional devices (to use 3 replicas).
-   For example:
+    ./quickstart.sh --extra-vars @config/general_config/devmode.yml --release master-tripleo -g 359630 -e @swift.yaml <VIRTHOST>
 
-    ssh $VIRTHOST
-    su - stack
-    dd if=/dev/zero of=control_0_vdb.img bs=1k count=100k
-    dd if=/dev/zero of=control_0_vdc.img bs=1k count=100k
-    dd if=/dev/zero of=control_0_vdd.img bs=1k count=100k
-    virsh attach-disk --config control_0 ~/control_0_vdb.img vdb
-    virsh attach-disk --config control_0 ~/control_0_vdc.img vdc
-    virsh attach-disk --config control_0 ~/control_0_vdd.img vdd
+   The required `swift.yaml` could look like this:
 
-3) Run the introspection on the undercloud:
+    overcloud_nodes:
+      - name: objectstorage_0
+        flavor: objectstorage
+      - name: objectstorage_1
+        flavor: objectstorage
 
-    source stackrc
-    openstack baremetal introspection bulk start
+      - name: control_0
+        flavor: control
 
-4) You need the following patch on your undercloud instance:
+    overcloud_templates_repo: "https://git.openstack.org/openstack/tripleo-heat-templates"
+    overcloud_templates_path: "tripleo-heat-templates"
+    overcloud_templates_refspec: "refs/changes/43/358643/1"
 
-    https://review.openstack.org/358643/
+    extra_args: >-
+    --control-scale 1 --compute-scale 0 --swift-storage-scale 2
 
-5) Install the `tripleo-swift-ring-tool` to create rings based on the
-   disks gathered from introspection data:
+2) SSH into the undercloud and install the [tripleo-swift-ring-tool.py][4] tool:
 
+    ssh -F /home/vagrant/.quickstart/ssh.config.ansible undercloud
     curl -O "https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py"
 
-6) Run the `tripleo-swift-ring-tool` and upload the created ring- and
-   builderfiles to the undercloud Swift. The `upload-swift-artifacts` tool will
+3) Run the `tripleo-swift-ring-tool` and upload the created ring- and
+   builderfiles to the undercloud Swift:
+
+    source stackrc
+    python tripleo_swift_ring_tool.py overcloud-rings
+    upload-swift-artifacts -f overcloud-rings/rings.tar.gz
+
+   The `upload-swift-artifacts` tool will
    create a template in `~/.tripleo/environments/deployment-artifacts.yaml`
    that includes a temporary url that will be used during the deployment. The
    `tripleo-swift-ring-tool` will create a template in
    `~/.tripleo/environments/swift_disks.yaml` with a per-node list of disks to
-   prepare for Swift.
+   prepare for Swift, disabling default ringbuilding and re-enabling the
+   mount check.
 
-    tripleo-swift-ring-tool overcloud-rings
-    OS_AUTH_URL=`echo "$OS_AUTH_URL" | sed -e 's/v2.0/v3/g'`OS_IDENTITY_API_VERSION=3 ./upload-swift-artifacts -f overcloud-rings/rings.tar.gz
+4) Deploy the overcloud:
 
-   Note: you need the [tripleo-common/scripts/upload-swift-artifacts][3] tool for this.
-
-7) Deploy the overcloud:
-
-    openstack overcloud deploy --templates
+    overcloud-deploy.sh
 
    This will deploy an overcloud and
    - disable the default ring building in TripleO
@@ -60,5 +62,6 @@ POC using tripleo-quickstart
    - add system uuid hostname aliases
 
 [1]: https://github.com/openstack/tripleo-quickstart
-[2]: http://docs.openstack.org/developer/tripleo-docs/advanced_deployment/node_placement.html
-[3]: https://raw.githubusercontent.com/openstack/tripleo-common/master/scripts/upload-swift-artifacts
+[2]: https://review.openstack.org/359630/
+[3]: https://review.openstack.org/358643/
+[4]: https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py
