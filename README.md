@@ -53,7 +53,7 @@ POC using tripleo-quickstart
 
 4) Deploy the overcloud:
 
-    overcloud-deploy.sh
+    ~/.overcloud-deploy.sh
 
    This will deploy an overcloud and
    - disable the default ring building in TripleO
