@@ -7,11 +7,11 @@ A small tool to simplify ring management for TripleO-based Swift installations.
 POC using tripleo-quickstart
 ----------------------------
 
-1) Deploy a [TripleO quickstart][1] undercloud including Gerrit reviews
-   [#359630][2] (tripleo-quickstart) and [#358643][3] (tripleo-heat-templates)
+1) Deploy a [TripleO quickstart][1] undercloud including Gerrit review
+   [#358643][2] (tripleo-heat-templates)
    and one ore more objectstorage nodes:
 
-    ./quickstart.sh --extra-vars @config/general_config/devmode.yml --release master-tripleo -g 359630 -e @swift.yaml <VIRTHOST>
+    ./quickstart.sh --release master-tripleo-ci -e @swift.yaml <VIRTHOST>
 
    The required `swift.yaml` could look like this:
 
@@ -26,12 +26,11 @@ POC using tripleo-quickstart
 
     overcloud_templates_repo: "https://git.openstack.org/openstack/tripleo-heat-templates"
     overcloud_templates_path: "tripleo-heat-templates"
-    overcloud_templates_refspec: "refs/changes/43/358643/1"
+    overcloud_templates_refspec: "refs/changes/43/358643/4"
 
-    extra_args: >-
-    --control-scale 1 --compute-scale 0 --swift-storage-scale 2
+    extra_args: --control-scale 1 --compute-scale 0 --swift-storage-scale 2
 
-2) SSH into the undercloud and install the [tripleo-swift-ring-tool.py][4] tool:
+2) SSH into the undercloud and install the [tripleo-swift-ring-tool.py][3] tool:
 
     ssh -F /home/vagrant/.quickstart/ssh.config.ansible undercloud
     curl -O "https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py"
@@ -53,7 +52,7 @@ POC using tripleo-quickstart
 
 4) Deploy the overcloud:
 
-    ~/.overcloud-deploy.sh
+    ~/overcloud-deploy.sh
 
    This will deploy an overcloud and
    - disable the default ring building in TripleO
@@ -62,6 +61,5 @@ POC using tripleo-quickstart
    - add system uuid hostname aliases
 
 [1]: https://github.com/openstack/tripleo-quickstart
-[2]: https://review.openstack.org/359630/
-[3]: https://review.openstack.org/358643/
-[4]: https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py
+[2]: https://review.openstack.org/358643/
+[3]: https://raw.githubusercontent.com/cschwede/tripleo-swift-ring-tool/master/tripleo_swift_ring_tool.py
